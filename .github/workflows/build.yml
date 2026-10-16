@@ -1,0 +1,33 @@
+name: build
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 9.2.0
+      - name: Uloz pliki w foldery
+        run: |
+          J=src/main/java/pl/visualboost
+          R=src/main/resources
+          mvf() { dest="$1"; shift; mkdir -p "$dest"; for f in "$@"; do if [ -f "$f" ]; then mv "$f" "$dest/"; fi; done; }
+          mvf $J Config.java Effects.java PanelCfg.java VisualBoostClient.java
+          mvf $J/gui BoostScreen.java HudEditScreen.java ValueSlider.java
+          mvf $J/hud ArmorPanel.java CooldownsPanel.java CoordsPanel.java Draw.java EffectsPanel.java FriendsPanel.java Hud.java InfoPanel.java InventoryPanel.java KeystrokesPanel.java Panel.java PlayerCardPanel.java ResourcesPanel.java
+          mvf $R fabric.mod.json
+          mvf $R/assets/visualboost/lang en_us.json pl_pl.json
+      - run: gradle build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: visualboost-jar
+          path: |
+            build/libs/*.jar
+            !build/libs/*-sources.jar
